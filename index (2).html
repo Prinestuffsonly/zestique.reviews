@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f2f2f2;
+        }
+        header {
+            width: 100%;
+            background: #000000;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        header #login-button {
+            background: white;
+            color: #007BFF;
+            border: none;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 75px;
+        }
+        header #login-button:hover {
+            background: #e6e6e6;
+        }
+        form {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+        form h2 {
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            color: #333;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        textarea {
+            resize: none;
+        }
+        button {
+            background-color: #000000;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #admin-section {
+            display: none;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+        #reviews {
+            margin-top: 20px;
+        }
+        .review {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        .review h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #007BFF;
+        }
+        .review p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #333;
+        }
+        .review img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button id="login-button">Login</button>
+    </header>
+
+    <form id="review-form">
+        <h2>Share Your Experience</h2>
+
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+        <label for="review">Your Review:</label>
+        <textarea id="review" name="review" rows="5" placeholder="Write your review here" required></textarea>
+
+        <label for="image">Upload an Image:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+
+        <button type="submit">Submit Review</button>
+    </form>
+
+    <div id="admin-section">
+        <h2>Admin Reviews</h2>
+        <div id="reviews"></div>
+        <button id="logout">Logout</button>
+    </div>
+
+    <script>
+        const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+
+        // Display reviews for admin
+        function displayReviews() {
+            const reviewsDiv = document.getElementById('reviews');
+            reviewsDiv.innerHTML = '';
+            reviews.forEach((review, index) => {
+                const reviewDiv = document.createElement('div');
+                reviewDiv.classList.add('review');
+                reviewDiv.innerHTML = `
+                    <h3>${review.name}</h3>
+                    <p>${review.text}</p>
+                    ${review.image ? `<img src="${review.image}" alt="Review Image">` : ''}
+                    <button onclick="deleteReview(${index})">Delete</button>
+                `;
+                reviewsDiv.appendChild(reviewDiv);
+            });
+        }
+
+        // Add a new review
+        document.getElementById('review-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const review = document.getElementById('review').value;
+            const imageInput = document.getElementById('image');
+            let image = '';
+
+            if (imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    image = e.target.result;
+                    saveReview(name, review, image);
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                saveReview(name, review, image);
+            }
+        });
+
+        function saveReview(name, text, image) {
+            reviews.push({ name, text, image });
+            localStorage.setItem('reviews', JSON.stringify(reviews));
+            alert('Review submitted!');
+            document.getElementById('review-form').reset();
+        }
+
+        // Delete a review
+        function deleteReview(index) {
+            reviews.splice(index, 1);
+            localStorage.setItem('reviews', JSON.stringify(reviews));
+            displayReviews();
+        }
+
+        // Admin login
+        document.getElementById('login-button').addEventListener('click', () => {
+            const password = prompt('Enter admin password:');
+            if (password === 'safwanumar') { // Replace with a better authentication method in production
+                document.getElementById('review-form').style.display = 'none';
+                document.getElementById('admin-section').style.display = 'block';
+                displayReviews();
+            } else {
+                alert('Incorrect password!');
+            }
+        });
+
+        // Admin logout
+        document.getElementById('logout').addEventListener('click', () => {
+            document.getElementById('review-form').style.display = 'block';
+            document.getElementById('admin-section').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
